@@ -423,21 +423,6 @@
             renderCalendar();
         </script>
 
-        <script>
-    // ดึงค่าเดิมที่เคยเก็บไว้ ถ้าไม่มีให้เริ่มที่ 0
-    let days = localStorage.getItem('myDayCount') ? parseInt(localStorage.getItem('myDayCount')) : 0;
-    
-    // แสดงค่าเริ่มต้นทันทีที่โหลดหน้าจอ
-    document.getElementById('dayCount').innerText = days + " day";
-
-    function addDay() {
-        days++;
-        document.getElementById('dayCount').innerText = days + " day";
-        // บันทึกค่าลงในเครื่องคอมพิวเตอร์
-        localStorage.setItem('myDayCount', days);
-    }
-</script>
-
         <div class="bg-pink-main p-6 rounded-lg shadow-lg flex flex-col items-center text-white">
             <h2 class="text-2xl mb-4 font-bold">คำอวยพร</h2>
             <div class="bg-gray-200 w-full h-24 rounded mb-4 flex items-center justify-center p-4">
@@ -516,3 +501,4 @@
 
 
 </html>
+
