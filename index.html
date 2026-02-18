@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Pink Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+            height: 100vh;
+            overflow: hidden;
+            /* ป้องกันการเกิด Scrollbar */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-pink-main {
+            background-color: rgba(192, 108, 145, 0.85);
+            /* ปรับให้โปร่งแสงนิดๆ จะเห็นดาวตกข้างหลังสวยมาก */
+            backdrop-filter: blur(5px);
+            /* เพิ่มเอฟเฟกต์กระจกฝ้า */
+        }
+
+        /* --- CSS ฝนดาวตก --- */
+        .night {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotateZ(45deg);
+            /* เอียงดาวตก */
+            z-index: -1;
+            /* ให้ไปอยู่ข้างหลังสุด */
+        }
+
+        .shooting_star {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            height: 2px;
+            background: linear-gradient(-45deg, #5f91ff, rgba(0, 0, 255, 0));
+            border-radius: 999px;
+            filter: drop-shadow(0 0 6px #699bff);
+            animation: tail 3000ms ease-in-out infinite, shooting 3000ms ease-in-out infinite;
+        }
+
+        .shooting_star::before,
+        .shooting_star::after {
+            content: '';
+            position: absolute;
+            top: calc(50% - 1px);
+            right: 0;
+            height: 2px;
+            background: linear-gradient(-45deg, rgba(0, 0, 255, 0), #5f91ff, rgba(0, 0, 255, 0));
+            transform: translateX(50%) rotateZ(45deg);
+            border-radius: 100%;
+            animation: shining 3000ms ease-in-out infinite;
+        }
+
+        .shooting_star::after {
+            transform: translateX(50%) rotateZ(-45deg);
+        }
+
+        @keyframes tail {
+            0% {
+                width: 0;
+            }
+
+            30% {
+                width: 100px;
+            }
+
+            100% {
+                width: 0;
+            }
+        }
+
+        @keyframes shooting {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(300px);
+            }
+        }
+
+        @keyframes shining {
+            0% {
+                width: 0;
+            }
+
+            50% {
+                width: 30px;
+            }
+
+            100% {
+                width: 0;
+            }
+        }
+
+        /* สุ่มตำแหน่งและเวลาเกิดของดาวตกแต่ละดวง */
+        .shooting_star:nth-child(1) {
+            top: 10%;
+            left: 20%;
+            animation-delay: 0ms;
+        }
+
+        .shooting_star:nth-child(2) {
+            top: 30%;
+            left: 50%;
+            animation-delay: 500ms;
+        }
+
+        .shooting_star:nth-child(3) {
+            top: 50%;
+            left: 10%;
+            animation-delay: 1200ms;
+        }
+
+        .shooting_star:nth-child(4) {
+            top: 70%;
+            left: 80%;
+            animation-delay: 2000ms;
+        }
+
+        .shooting_star:nth-child(5) {
+            top: 20%;
+            left: 90%;
+            animation-delay: 2500ms;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="night">
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+        <div class="shooting_star"></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
+
+        <div class="bg-pink-main p-4 rounded-lg shadow-lg flex flex-col items-center justify-center min-h-[300px]">
+            <div class="w-full h-40 bg-white/20 rounded flex items-center justify-center overflow-hidden relative mb-2">
+                <div id="musicIcon" class="text-8xl cursor-pointer transition-all duration-300">🎵</div>
+
+                <audio id="bgMusic" onended="nextTrack()">
+                    <source id="musicSource" src="I Wanna Be Yours Edit audio.mp3" type="audio/mpeg">
+                </audio>
+            </div>
+
+            <p id="songTitle" class="text-white text-sm font-bold mb-2">I Wanna Be Yours</p>
+
+            <div class="flex items-center gap-6 text-white text-2xl mb-4">
+                <button onclick="prevTrack()" class="hover:scale-110 active:scale-90 transition-transform">❮❮</button>
+                <button onclick="toggleMusic()" id="playBtn"
+                    class="bg-white/20 p-3 rounded-full hover:bg-white/40 transition-all">▶</button>
+                <button onclick="nextTrack()" class="hover:scale-110 active:scale-90 transition-transform">❯❯</button>
+            </div>
+
+            <div class="flex items-center gap-2 w-full px-4">
+                <span class="text-white text-xs">🔈</span>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5"
+                    class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-white">
+                <span class="text-white text-xs">🔊</span>
+            </div>
+        </div>
+
+        <script>
+            const music = document.getElementById('bgMusic');
+            const source = document.getElementById('musicSource');
+            const icon = document.getElementById('musicIcon');
+            const playBtn = document.getElementById('playBtn');
+            const songTitle = document.getElementById('songTitle');
+            const volumeSlider = document.getElementById('volumeSlider');
+
+            // รายชื่อเพลง (เพิ่ม URL และชื่อเพลงได้ที่นี่)
+            const playlist = [
+                { title: "I Wanna Be Yours", url: "I Wanna Be Yours Edit audio.mp3" },
+                { title: "Michi Teyu Ku ", url: "Michi Teyu Ku.mp3" },
+                { title: "double take", url: "Dhruv - double take (Official Audio).mp3" }
+
+            ];
+
+            let currentTrackIndex = 0;
+
+            // ฟังก์ชันเล่น/หยุด
+            function toggleMusic() {
+                if (music.paused) {
+                    music.play();
+                    icon.classList.add('animate-heartbeat');
+                    playBtn.innerText = "⏸";
+                } else {
+                    music.pause();
+                    icon.classList.remove('animate-heartbeat');
+                    playBtn.innerText = "▶";
+                }
+            }
+
+            // ฟังก์ชันเปลี่ยนเพลง (Next)
+            function nextTrack() {
+                currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+                loadTrack(currentTrackIndex);
+            }
+
+            // ฟังก์ชันเปลี่ยนเพลง (Previous)
+            function prevTrack() {
+                currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+                loadTrack(currentTrackIndex);
+            }
+
+            // โหลดเพลงเข้า Player
+            function loadTrack(index) {
+                source.src = playlist[index].url;
+                songTitle.innerText = playlist[index].title;
+                music.load();
+                music.play();
+                icon.classList.add('animate-heartbeat');
+                playBtn.innerText = "⏸";
+            }
+
+            // ระบบปรับระดับเสียง
+            volumeSlider.addEventListener('input', (e) => {
+                music.volume = e.target.value;
+            });
+
+            // ตั้งค่าระดับเสียงเริ่มต้น
+            music.volume = 0.5;
+        </script>
+
+        <style>
+            @keyframes heartbeat {
+
+                0%,
+                100% {
+                    transform: scale(1);
+                }
+
+                50% {
+                    transform: scale(1.15);
+                }
+            }
+
+            .animate-heartbeat {
+                animation: heartbeat 0.8s infinite ease-in-out;
+            }
+
+            /* ปรับแต่งหน้าตา Slider ให้ดู Minimal */
+            input[type='range']::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 12px;
+                height: 12px;
+                background: white;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+        </style>
+
+        <style>
+            /* Animation สำหรับ Emoji */
+            @keyframes heartbeat {
+                0% {
+                    transform: scale(1);
+                }
+
+                50% {
+                    transform: scale(1.1);
+                }
+
+                100% {
+                    transform: scale(1);
+                }
+            }
+
+            .animate-heartbeat {
+                animation: heartbeat 1s infinite ease-in-out;
+            }
+        </style>
+
+        <div
+            class="md:col-span-2 bg-pink-main p-6 rounded-lg shadow-lg relative flex flex-col items-center justify-center min-h-[300px] overflow-hidden">
+            <div class="w-full h-full flex items-center justify-center">
+                <img id="displayImage" src="1.jpg"
+                    class="max-h-[250px] rounded-lg shadow-md object-cover transition-opacity duration-500">
+            </div>
+
+            <button onclick="prevImg()"
+                class="absolute left-4 text-white text-5xl hover:opacity-70 transition-transform active:scale-90">❮</button>
+            <button onclick="nextImg()"
+                class="absolute right-4 text-white text-5xl hover:opacity-70 transition-transform active:scale-90">❯</button>
+
+
+        </div>
+
+        <script>
+            // รายการรูปภาพ (คุณสามารถเปลี่ยน URL รูปภาพตรงนี้ได้)
+            const images = [
+                "2.jpg",
+                "3.jpg"
+
+            ];
+
+            let currentIndex = 0;
+            const imgElement = document.getElementById('displayImage');
+
+            function updateImage() {
+                // เพิ่ม Effect ค่อยๆ จางลงแล้วค่อยเปลี่ยนรูป
+                imgElement.style.opacity = 0;
+                setTimeout(() => {
+                    imgElement.src = images[currentIndex];
+                    imgElement.style.opacity = 1;
+                }, 200);
+            }
+
+            function nextImg() {
+                currentIndex = (currentIndex + 1) % images.length;
+                updateImage();
+            }
+
+            function prevImg() {
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+                updateImage();
+            }
+        </script>
+        <div class="bg-[#C06C91] p-4 rounded-lg shadow-lg text-white w-72">
+            <div id="calendarHeader"
+                class="bg-black text-center py-1 rounded mb-4 text-sm font-bold uppercase tracking-wider">
+                -
+            </div>
+
+            <div class="grid grid-cols-7 text-center text-[11px] gap-y-2 items-center" id="calendarGrid">
+            </div>
+        </div>
+
+        <script>
+            const calendarGrid = document.getElementById('calendarGrid');
+            const calendarHeader = document.getElementById('calendarHeader');
+
+            // ตั้งค่าเริ่มต้น: วันที่ปัจจุบัน
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth(); // 0-11
+            const today = now.getDate();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+            const dayLabels = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
+            function renderCalendar() {
+                // 1. แสดงชื่อเดือนและปี
+                calendarHeader.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+
+                // 2. เคลียร์ตารางเดิม
+                calendarGrid.innerHTML = '';
+
+                // 3. สร้างหัวข้อวัน (Mo - Su)
+                dayLabels.forEach((day, index) => {
+                    const dayEl = document.createElement('div');
+                    dayEl.innerText = day;
+                    dayEl.className = (index >= 5) ? "text-blue-300 font-bold" : "opacity-70";
+                    calendarGrid.appendChild(dayEl);
+                });
+
+                // 4. คำนวณหาวันแรกของเดือนเริ่มที่วันไหน (0=Sun, 1=Mon...)
+                let firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+                // ปรับให้จันทร์เป็นวันแรก (0=Mon, 6=Sun) ตามดีไซน์
+                let startingPoint = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
+
+                // 5. หาจำนวนวันในเดือนนี้
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+                // 6. สร้างช่องว่างก่อนเริ่มวันที่ 1
+                for (let i = 0; i < startingPoint; i++) {
+                    const emptyDiv = document.createElement('div');
+                    calendarGrid.appendChild(emptyDiv);
+                }
+
+                // 7. สร้างวันที่ 1 ถึงสิ้นเดือน
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const daySquare = document.createElement('div');
+                    daySquare.innerText = day;
+                    daySquare.className = "cursor-pointer w-7 h-7 flex items-center justify-center mx-auto transition-all duration-200 rounded-full hover:bg-white/20";
+
+                    // ตรวจสอบว่าเป็นวันหยุด (สาร์-อาทิตย์) หรือไม่
+                    const dateObj = new Date(currentYear, currentMonth, day);
+                    const dayOfWeek = dateObj.getDay();
+                    if (dayOfWeek === 0 || dayOfWeek === 6) {
+                        daySquare.classList.add('text-blue-200');
+                    }
+
+                    // ถ้าเป็นวันที่ปัจจุบัน ให้ Highlight ไว้ก่อน
+                    if (day === today && currentMonth === now.getMonth() && currentYear === now.getFullYear()) {
+                        daySquare.classList.add('bg-black', 'ring-1', 'ring-white');
+                        daySquare.id = "activeDay";
+                    }
+
+                    // เพิ่ม Event การคลิกเพื่อเลือกวันที่
+                    daySquare.onclick = function () {
+                        // ลบ Highlight จากวันเก่า
+                        const prevActive = document.querySelector('.calendar-selected');
+                        const defaultActive = document.getElementById('activeDay');
+                        if (prevActive) prevActive.classList.remove('bg-black', 'ring-1', 'ring-white', 'calendar-selected');
+                        if (defaultActive) defaultActive.classList.remove('bg-black', 'ring-1', 'ring-white');
+
+                        // เพิ่ม Highlight ให้วันที่ถูกคลิก
+                        this.classList.add('bg-black', 'ring-1', 'ring-white', 'calendar-selected');
+                    };
+
+                    calendarGrid.appendChild(daySquare);
+                }
+            }
+
+            // เรียกใช้งานฟังก์ชัน
+            renderCalendar();
+        </script>
+
+        <div class="bg-pink-main p-6 rounded-lg shadow-lg flex flex-col items-center justify-between text-white">
+            <div class="text-center">
+                <h2 id="dayCount" class="text-5xl font-bold">0 day</h2>
+            </div>
+            <button onclick="addDay()" class="heart-btn flex flex-col items-center mt-4">
+                <span class="text-6xl text-white drop-shadow-md">❤</span>
+                <p class="text-sm font-light">press</p>
+            </button>
+        </div>
+
+        <div class="bg-pink-main p-6 rounded-lg shadow-lg flex flex-col items-center text-white">
+            <h2 class="text-2xl mb-4 font-bold">คำอวยพร</h2>
+            <div class="bg-gray-200 w-full h-24 rounded mb-4 flex items-center justify-center p-4">
+                <p id="blessingText" class="text-gray-700 text-center text-md">กดหัวใจเพื่อรับคำอวยพร</p>
+            </div>
+            <button onclick="getBlessing()" class="heart-btn flex flex-col items-center">
+                <span class="text-6xl text-white drop-shadow-md">❤</span>
+                <p class="text-sm font-light">press</p>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // ฟังก์ชันบวกวันที่
+        let days = 0;
+        function addDay() {
+            days++;
+            document.getElementById('dayCount').innerText = days + " day";
+        }
+
+        // ฟังก์ชันสุ่มคำอวยพร
+        const blessings = [
+            "รักเธอที่สุดนะ",
+            "มีความสุขมากๆนะที่รัก",
+            "คิดถึงทั้งวันเลย",
+            "วันนี้ก็รักเหมือนเดิม",
+            "พรุ่งนี้ก็รักมากขึ้น",
+            "อยู่ด้วยกันไปนานๆนะ",
+            "ยิ้มเยอะๆนะคนเก่ง",
+            "อย่าลืมกินข้าวนะ",
+            "ดูแลตัวเองดีๆนะ",
+            "เหนื่อยก็พักนะ เดี๋ยวกอดเอง",
+            "ขอให้เจอแต่เรื่องดีๆ",
+            "ขอให้วันนี้อบอุ่น",
+            "ขอให้ใจฟูทั้งวัน",
+            "ขอให้สบายใจนะ",
+            "ขอให้หลับฝันดีนะ",
+            "ตื่นมาก็ขอให้สดใส",
+            "ไม่เก่งเรื่องอวย แต่รักมากนะ",
+            "เป็นกำลังใจให้เสมอ",
+            "อยู่ตรงนี้ไม่ไปไหน",
+            "ขอให้ไม่เครียดนะ",
+            "โลกอาจเหนื่อย แต่เรารักเธอ",
+            "อยู่กับเราไปนานๆนะ",
+            "รักเพิ่มทุกวันเลย",
+            "ขอให้โชคดีทั้งวัน",
+            "ทำอะไรก็ผ่านฉลุย",
+            "เก่งที่สุดในใจเรา",
+            "ขอให้หัวเราะเยอะๆ",
+            "ขอให้มีแต่รอยยิ้ม",
+            "รักนะรู้ไหม",
+            "รักมากกว่าที่พูด",
+            "รักแบบไม่มีวันเบื่อ",
+            "รักเธอคนเดียวพอ",
+            "คิดถึงก่อนนอนทุกคืน",
+            "ตื่นมาก็ยังรักอยู่",
+            "ยิ่งนานยิ่งรัก",
+            "งอนก็ยังรักนะ",
+            "เธอคือความสบายใจ",
+            "เธอคือบ้านของเรา",
+            "มีเธอก็พอแล้ว",
+            "โชคดีที่สุดที่มีเธอ",
+            "อยากอยู่ด้วยทุกวัน",
+            "ขอให้รักนี้นานๆ",
+            "จับมือกันไปเรื่อยๆนะ",
+            "ขอให้เราแก่ไปด้วยกัน"
+        ];
+
+        function getBlessing() {
+            const randomIndex = Math.floor(Math.random() * blessings.length);
+            document.getElementById('blessingText').innerText = blessings[randomIndex];
+        }
+    </script>
+</body>
+
+</html>
