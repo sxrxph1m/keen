@@ -423,15 +423,20 @@
             renderCalendar();
         </script>
 
-        <div class="bg-pink-main p-6 rounded-lg shadow-lg flex flex-col items-center justify-between text-white">
-            <div class="text-center">
-                <h2 id="dayCount" class="text-5xl font-bold">0 day</h2>
-            </div>
-            <button onclick="addDay()" class="heart-btn flex flex-col items-center mt-4">
-                <span class="text-6xl text-white drop-shadow-md">❤</span>
-                <p class="text-sm font-light">press</p>
-            </button>
-        </div>
+        <script>
+    // ดึงค่าเดิมที่เคยเก็บไว้ ถ้าไม่มีให้เริ่มที่ 0
+    let days = localStorage.getItem('myDayCount') ? parseInt(localStorage.getItem('myDayCount')) : 0;
+    
+    // แสดงค่าเริ่มต้นทันทีที่โหลดหน้าจอ
+    document.getElementById('dayCount').innerText = days + " day";
+
+    function addDay() {
+        days++;
+        document.getElementById('dayCount').innerText = days + " day";
+        // บันทึกค่าลงในเครื่องคอมพิวเตอร์
+        localStorage.setItem('myDayCount', days);
+    }
+</script>
 
         <div class="bg-pink-main p-6 rounded-lg shadow-lg flex flex-col items-center text-white">
             <h2 class="text-2xl mb-4 font-bold">คำอวยพร</h2>
@@ -508,5 +513,6 @@
         }
     </script>
 </body>
+
 
 </html>
